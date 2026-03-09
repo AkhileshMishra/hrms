@@ -48,6 +48,7 @@ def create_sg_salary_components():
             "salary_component_abbr": "ECPF",
             "type": "Deduction",
             "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
             "formula": "sg_cpf_employee(BS, date_of_birth, sg_pr_status)",
             "depends_on_payment_days": 0,
             "description": "Employee CPF contribution (auto-calculated based on age and residency)",
@@ -57,6 +58,7 @@ def create_sg_salary_components():
             "salary_component_abbr": "ERCPF",
             "type": "Deduction",
             "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
             "do_not_include_in_total": 1,
             "formula": "sg_cpf_employer(BS, date_of_birth, sg_pr_status)",
             "depends_on_payment_days": 0,
@@ -67,6 +69,7 @@ def create_sg_salary_components():
             "salary_component_abbr": "SDL",
             "type": "Deduction",
             "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
             "do_not_include_in_total": 1,
             "formula": "sg_sdl(BS)",
             "depends_on_payment_days": 0,
@@ -77,6 +80,7 @@ def create_sg_salary_components():
             "salary_component_abbr": "SHG",
             "type": "Deduction",
             "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
             "formula": "sg_shg(BS, sg_ethnicity)",
             "depends_on_payment_days": 0,
             "description": "Self-Help Group: CDAC/MBMF/SINDA/ECF based on ethnicity",
@@ -124,11 +128,15 @@ def create_sg_salary_structure():
         "abbr": "BS",
         "formula": "base",
         "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
     })
 
-    for comp_name, abbr, formula in [
-        ("Employee CPF", "ECPF", "sg_cpf_employee(BS, date_of_birth, sg_pr_status)"),
-        ("SHG Fund", "SHG", "sg_shg(BS, sg_ethnicity)"),
+    for comp_name, abbr, formula, nit in [
+        ("Employee CPF", "ECPF", "sg_cpf_employee(BS, date_of_birth, sg_pr_status)", 0),
+        ("Employer CPF", "ERCPF", "sg_cpf_employer(BS, date_of_birth, sg_pr_status)", 1),
+        ("SDL", "SDL", "sg_sdl(BS)", 1),
+        ("Employee CPF", "ECPF", "sg_cpf_employee(BS, date_of_birth, sg_pr_status)", 0),
+        ("SHG Fund", "SHG", "sg_shg(BS, sg_ethnicity)", 0),
     ]:
         if frappe.db.exists("Salary Component", comp_name):
             ss.append("deductions", {
@@ -136,6 +144,7 @@ def create_sg_salary_structure():
                 "abbr": abbr,
                 "formula": formula,
                 "amount_based_on_formula": 1,
+                "do_not_include_in_total": nit,
             })
 
     ss.insert(ignore_permissions=True)

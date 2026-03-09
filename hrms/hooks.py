@@ -45,6 +45,7 @@ app_include_css = "hrms.bundle.css"
 
 # include js in doctype views
 doctype_js = {
+	"Payroll Entry": "hrms/regional/singapore/statutory_buttons.js",
 	"Employee": "public/js/erpnext/employee.js",
 	"Company": "public/js/erpnext/company.js",
 	"Department": "public/js/erpnext/department.js",

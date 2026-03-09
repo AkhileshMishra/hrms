@@ -1,0 +1,125 @@
+<!-- Singapore MOM-Compliant Itemized Payslip -->
+<!-- Employment Act Section 96 requires: name, pay period, basic pay, allowances, deductions, net pay -->
+<style>
+    .payslip { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    .payslip-header { border-bottom: 3px solid #0066B3; padding-bottom: 15px; margin-bottom: 20px; }
+    .payslip-header h2 { color: #003D6B; margin: 0; }
+    .payslip-header .company { font-size: 20px; font-weight: bold; color: #0066B3; }
+    .payslip-header .subtitle { color: #666; font-size: 12px; }
+    .emp-details { display: flex; flex-wrap: wrap; margin-bottom: 20px; background: #f8f8f8; padding: 12px; border-radius: 6px; }
+    .emp-details .col { flex: 1; min-width: 200px; }
+    .emp-details .label { font-size: 11px; color: #888; text-transform: uppercase; }
+    .emp-details .value { font-size: 14px; font-weight: 600; color: #333; }
+    .pay-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+    .pay-table th { background: #0066B3; color: white; padding: 8px 12px; text-align: left; font-size: 12px; }
+    .pay-table td { padding: 6px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+    .pay-table td.amount { text-align: right; font-family: monospace; }
+    .pay-table tr:last-child td { border-bottom: 2px solid #0066B3; }
+    .summary { background: #003D6B; color: white; padding: 15px; border-radius: 6px; margin-top: 20px; }
+    .summary .row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .summary .net { font-size: 20px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.3); padding-top: 8px; margin-top: 8px; }
+    .employer-section { margin-top: 15px; padding: 10px; background: #fff8e1; border-left: 3px solid #F5C518; border-radius: 4px; }
+    .employer-section h4 { margin: 0 0 8px 0; color: #666; font-size: 12px; }
+    .footer { margin-top: 30px; font-size: 10px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 10px; }
+</style>
+
+<div class="payslip">
+    <div class="payslip-header">
+        <div class="company">{{ doc.company }}</div>
+        <h2>Itemized Payslip</h2>
+        <div class="subtitle">Pay Period: {{ frappe.utils.formatdate(doc.start_date) }} to {{ frappe.utils.formatdate(doc.end_date) }}</div>
+    </div>
+
+    <div class="emp-details">
+        <div class="col">
+            <div class="label">Employee Name</div>
+            <div class="value">{{ doc.employee_name }}</div>
+        </div>
+        <div class="col">
+            <div class="label">Employee ID</div>
+            <div class="value">{{ doc.employee }}</div>
+        </div>
+        <div class="col">
+            <div class="label">Designation</div>
+            <div class="value">{{ doc.designation or "-" }}</div>
+        </div>
+        <div class="col">
+            <div class="label">Payment Date</div>
+            <div class="value">{{ frappe.utils.formatdate(doc.posting_date) }}</div>
+        </div>
+        <div class="col">
+            <div class="label">Working Days</div>
+            <div class="value">{{ doc.payment_days }} / {{ doc.total_working_days }}</div>
+        </div>
+    </div>
+
+    <!-- Earnings -->
+    <table class="pay-table">
+        <thead><tr><th>Earnings</th><th style="text-align:right">Amount (SGD)</th></tr></thead>
+        <tbody>
+            {% for e in doc.earnings %}
+            <tr>
+                <td>{{ e.salary_component }}</td>
+                <td class="amount">{{ frappe.utils.fmt_money(e.amount, currency="SGD") }}</td>
+            </tr>
+            {% endfor %}
+            <tr style="font-weight:bold">
+                <td>Gross Pay</td>
+                <td class="amount">{{ frappe.utils.fmt_money(doc.gross_pay, currency="SGD") }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Employee Deductions -->
+    <table class="pay-table">
+        <thead><tr><th>Deductions (Employee)</th><th style="text-align:right">Amount (SGD)</th></tr></thead>
+        <tbody>
+            {% for d in doc.deductions %}
+            {% if not d.do_not_include_in_total %}
+            <tr>
+                <td>{{ d.salary_component }}</td>
+                <td class="amount">{{ frappe.utils.fmt_money(d.amount, currency="SGD") }}</td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <tr style="font-weight:bold">
+                <td>Total Deductions</td>
+                <td class="amount">{{ frappe.utils.fmt_money(doc.total_deduction, currency="SGD") }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Net Pay Summary -->
+    <div class="summary">
+        <div class="row">
+            <span>Gross Pay</span>
+            <span>{{ frappe.utils.fmt_money(doc.gross_pay, currency="SGD") }}</span>
+        </div>
+        <div class="row">
+            <span>Total Deductions</span>
+            <span>- {{ frappe.utils.fmt_money(doc.total_deduction, currency="SGD") }}</span>
+        </div>
+        <div class="row net">
+            <span>Net Pay</span>
+            <span>{{ frappe.utils.fmt_money(doc.net_pay, currency="SGD") }}</span>
+        </div>
+    </div>
+
+    <!-- Employer Contributions (for info) -->
+    <div class="employer-section">
+        <h4>EMPLOYER CONTRIBUTIONS (for your information — not deducted from pay)</h4>
+        {% for d in doc.deductions %}
+        {% if d.do_not_include_in_total %}
+        <div style="display:flex;justify-content:space-between;padding:2px 0;font-size:13px;">
+            <span>{{ d.salary_component }}</span>
+            <span style="font-family:monospace">{{ frappe.utils.fmt_money(d.amount, currency="SGD") }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="footer">
+        This is a computer-generated payslip. Issued in compliance with the Employment Act (Section 96).
+        <br>{{ doc.company }} &bull; Generated on {{ frappe.utils.now_datetime().strftime("%d %b %Y %H:%M") }}
+    </div>
+</div>
