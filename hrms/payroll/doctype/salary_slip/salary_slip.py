@@ -55,6 +55,7 @@ from hrms.payroll.doctype.salary_slip.salary_slip_loan_utils import (
 )
 from hrms.payroll.utils import sanitize_expression
 from hrms.utils.holiday_list import get_holiday_dates_between
+from hrms.regional.singapore.cpf import sg_cpf_employee, sg_cpf_employer, sg_sdl, sg_shg
 
 # cache keys
 HOLIDAYS_BETWEEN_DATES = "holidays_between_dates"
@@ -79,6 +80,12 @@ class SalarySlip(TransactionBase):
 			"get_last_day": get_last_day,
 			"ceil": ceil,
 			"floor": floor,
+			"min": min,
+			"max": max,
+			"sg_cpf_employee": sg_cpf_employee,
+			"sg_cpf_employer": sg_cpf_employer,
+			"sg_sdl": sg_sdl,
+			"sg_shg": sg_shg,
 		}
 
 	def autoname(self):
