@@ -231,6 +231,13 @@ def parse_resume_on_upload(file_url):
 		if not parsed:
 			return {"error": "AI could not parse the resume. Please fill in details manually."}
 
+		# Create any missing Skill records so Table MultiSelect can reference them
+		if parsed.get("skills"):
+			for skill_name in parsed["skills"]:
+				if not frappe.db.exists("Skill", skill_name):
+					frappe.get_doc({"doctype": "Skill", "skill_name": skill_name}).insert(ignore_permissions=True)
+			frappe.db.commit()
+
 		return {"success": True, "data": parsed}
 
 	except Exception as e:
