@@ -209,6 +209,7 @@ doc_events = {
 	},
 	"Project": {"validate": "hrms.controllers.employee_boarding_controller.update_employee_boarding_status"},
 	"Task": {"on_update": "hrms.controllers.employee_boarding_controller.update_task"},
+	"Job Applicant": {"after_insert": "hrms.hr.ai_resume_parser.after_insert_hook"},
 }
 
 # Scheduled Tasks
