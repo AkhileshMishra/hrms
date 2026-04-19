@@ -196,10 +196,43 @@ def process_resume(doc_name):
 
 def after_insert_hook(doc, method):
 	"""Hook called after Job Applicant is inserted. Enqueues background job."""
-	if doc.resume_attachment and doc.get("consent_given"):
+	if doc.resume_attachment and doc.get("consent_given") and not doc.get("ai_parsed"):
 		frappe.enqueue(
 			"hrms.hr.ai_resume_parser.process_resume",
 			doc_name=doc.name,
 			queue="short",
 			enqueue_after_commit=True,
 		)
+
+
+@frappe.whitelist(allow_guest=True)
+def parse_resume_on_upload(file_url):
+	"""Synchronous resume parsing — called from client on file upload.
+	Returns parsed data for the client to populate fields before save."""
+	if not file_url:
+		return {"error": "No file URL provided"}
+
+	try:
+		file_doc = frappe.get_doc("File", {"file_url": file_url})
+		file_path = file_doc.get_full_path()
+
+		ext = os.path.splitext(file_path)[1].lower()
+		if ext == ".pdf":
+			text = extract_text_from_pdf(file_path)
+		elif ext in (".doc", ".docx"):
+			text = extract_text_from_docx(file_path)
+		else:
+			return {"error": f"Unsupported file type: {ext}. Please upload PDF, DOC, or DOCX."}
+
+		if not text:
+			return {"error": "Could not extract text from the file."}
+
+		parsed = parse_resume_with_bedrock(text)
+		if not parsed:
+			return {"error": "AI could not parse the resume. Please fill in details manually."}
+
+		return {"success": True, "data": parsed}
+
+	except Exception as e:
+		frappe.log_error(f"Resume parse on upload failed: {e}", "AI Resume Parser")
+		return {"error": str(e)}
